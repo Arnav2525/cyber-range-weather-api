@@ -163,7 +163,7 @@ A workflow runs on every push and pull request to the `main` branch. It automati
 
 ## 📐 Design Rationale
 
-- **Why Open-Meteo?** No API keys required means reviewers can run the app instantly without creating accounts or setting up `.env` secrets. It provides high-quality geocoding and weather data in a single provider.
+- **Why Open-Meteo?** I believ this is the best choice because no API keys required means reviewers can run the app instantly without creating accounts or setting up `.env` secrets. It also tor meant that I did not have to expose private API keys in a public repository. 
 - **Why strict validation?** Rejecting malformed input early avoids unnecessary upstream API calls and follows secure API development practices.
 - **Why caching + rate limiting?** Reduces external latency and prevents abuse, which is critical when relying on free public endpoints. It also prevents DDoS attacks. 
 - **Why clustering?** It is to optimize system resource utilization.
