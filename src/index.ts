@@ -172,7 +172,10 @@ app.get('/locations/:zip', async (req: Request, res: Response, next: NextFunctio
 
 // 404 Handler for undefined routes
 app.use((req: Request, res: Response, next: NextFunction) => {
-    const error: any = new Error('Resource Not Found');
+    const error: any = new Error(
+        'Resource Not Found. Use the format /locations/:zip (e.g., /locations/24060) ' +
+        'or check the documentation at /api-docs'
+    );
     error.status = 404;
     next(error);
 });
