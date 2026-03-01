@@ -1,4 +1,6 @@
 ```mermaid
+Architecture :
+
 flowchart LR
   Client["🌐 Client<br>(Browser / curl)"]
 
@@ -33,6 +35,7 @@ flowchart LR
   Handler -->|JSON response| Client
 ```
 
+Request LifeCycle : 
 
 ```mermaid
 sequenceDiagram
