@@ -1,4 +1,5 @@
-import express, { Request, Response } from 'express';
+import cluster from 'node:cluster';
+import express, { Request, Response, NextFunction } from 'express';
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { pinoHttp } from "pino-http";
@@ -33,8 +34,17 @@ const cache = new LRUCache<string, { temperature: number; scale: string }>({
     ttl: 10 * 60 * 1000, //10 minutes
 })
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'UP',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
 
-app.get('/locations/:zip', async (req: Request, res: Response) => {
+
+app.get('/locations/:zip', async (req: Request, res: Response, next: any) => {
     try {
         const zipCode = req.params.zip;
         //This regex ensures the zip code is exactly 5 digits (0-9) 
@@ -102,15 +112,42 @@ app.get('/locations/:zip', async (req: Request, res: Response) => {
     //If the network drops, return a clean error
 
     catch (error) {
-        console.error("Failed to fetch weather data:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        next(error);
     }
 
+});
+
+// 404 Handler for undefined routes
+app.use((req: Request, res: Response, next: NextFunction) => {
+    const error: any = new Error('Resource Not Found');
+    error.status = 404;
+    next(error);
+});
+
+// Centralized Error Handling Middleware
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    const status = err.status || 500;
+    const message = err.message || 'Internal Server Error';
+
+    // Log the error using pino-http logger if available
+    if (req.log) {
+        req.log.error(err);
+    } else {
+        console.error("Critical Error:", err);
+    }
+
+    res.status(status).json({
+        error: message,
+        status,
+        timestamp: new Date().toISOString()
+    });
 });
 // Only start the server if this  file is run directly( not by Jest)
 if (process.env.NODE_ENV != 'test') {
     app.listen(PORT, () => {
-        console.log(`TypeScript Server is successfully running on http://localhost:${PORT}`);
+        if (!cluster.isWorker) {
+            console.log(`TypeScript Server is successfully running on http://localhost:${PORT}`);
+        }
     });
 }
 export default app;

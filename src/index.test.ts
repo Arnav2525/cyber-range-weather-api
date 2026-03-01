@@ -74,6 +74,24 @@ describe('Weather API routes', () => {
         expect(response.body.error).toBe("Invalid format. Zip code must be exactly 5 digits.");
     });
 
+    describe('Production Readiness', () => {
+        // Test 11: Health check endpoint
+        it('should return 200 OK for health check', async () => {
+            const response = await request(app).get('/health');
+            expect(response.status).toBe(200);
+            expect(response.body.status).toBe('UP');
+            expect(response.body).toHaveProperty('uptime');
+        });
+
+        // Test 12: Centralized error handling for 404
+        it('should return formatted JSON error for invalid routes', async () => {
+            const response = await request(app).get('/invalid-route-that-does-not-exist');
+            expect(response.status).toBe(404);
+            expect(response.body).toHaveProperty('error');
+            expect(response.body.status).toBe(404);
+        });
+    });
+
 });
 
 

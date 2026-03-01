@@ -4,9 +4,12 @@ const NUM_WORKERS = os.cpus().length;
 
 
 if (cluster.isPrimary) {
-    //This block runs once - in the primary process only
-    console.log(`[cluster] Primary process ${process.pid} is running`);
-    console.log(`[cluster] Forking ${NUM_WORKERS} workers (one per CPU core)...`);
+    console.clear();
+    console.log('---------------------------------------------------------');
+    console.log(' Weather API Cluster System');
+    console.log(` Status: Running on http://localhost:8080`);
+    console.log(` Workers: ${NUM_WORKERS} (Active)`);
+    console.log('---------------------------------------------------------');
 
     // Fork a worker for each CPU core
     for (let i = 0; i < NUM_WORKERS; i++) {
@@ -21,12 +24,28 @@ if (cluster.isPrimary) {
         );
         cluster.fork();
     });
+
+    // Shutdown Logic
+    const shutdown = () => {
+        console.log('\n[cluster] Received kill signal. Shutting down workers gracefully...');
+        for (const id in cluster.workers) {
+            cluster.workers[id]?.send('shutdown');
+            cluster.workers[id]?.disconnect();
+        }
+
+        // Forced exit after 5s if workers hang
+        setTimeout(() => {
+            console.error('[cluster] Forcefully shutting down.');
+            process.exit(1);
+        }, 5000);
+    };
+
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
 }
 else {
     //This block runs once per worker 
     await import('./index.js');
-    console.log(`[cluster] Worker ${process.pid} started`)
-
 }
 
 
