@@ -1,3 +1,7 @@
+/**
+ * Main logic for the Weather API
+ * This file handles the routes, data validation, and fetching weather from Open-Meteo.
+ */
 import cluster from 'node:cluster';
 import express, { Request, Response, NextFunction } from 'express';
 import rateLimit from "express-rate-limit";
@@ -91,17 +95,18 @@ app.get('/locations/:zip', async (req: Request, res: Response, next: NextFunctio
         const paramsResult = weatherParamsSchema.safeParse(req.params);
         const queryResult = weatherQuerySchema.safeParse(req.query);
 
+        // If the ZIP code is wrong, tell the user why
         if (!paramsResult.success) {
             return res.status(400).json({ error: paramsResult.error.issues[0]?.message || "Invalid Parameters" });
         }
+        // If the Scale is wrong, tell the user
         if (!queryResult.success) {
             return res.status(400).json({ error: queryResult.error.issues[0]?.message || "Invalid Query" });
         }
-
         const { zip: zipCode } = paramsResult.data;
         const normalizedScale = queryResult.data.scale.toLowerCase();
 
-         //Check if we already have the answer in our cache
+        //Check if we already have the answer in our cache
         const cacheKey = `${zipCode}-${normalizedScale}`;
         const cached = cache.get(cacheKey);
         if (cached) {
@@ -131,11 +136,14 @@ app.get('/locations/:zip', async (req: Request, res: Response, next: NextFunctio
         // Use those coordinates to ask the Weather API for the temperature
         const apiUnit = normalizedScale === 'celsius' ? 'celsius' : 'fahrenheit';
         const finalScale = normalizedScale === 'celsius' ? 'Celsius' : 'Fahrenheit';
+
+        // Build the URL to ask the Weather API for the temperature
         const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=${apiUnit}`;
 
         const weatherResponse = await fetch(weatherUrl);
         const weatherData = await weatherResponse.json() as any;
 
+        // If the Weather API is broken or empty, tell the user
         if (!weatherData || !weatherData.current_weather) {
             return res.status(502).json({ error: "Weather API returned no data" });
         }
@@ -162,18 +170,16 @@ app.get('/locations/:zip', async (req: Request, res: Response, next: NextFunctio
 
 });
 
-// --- Final Error Handlers ---
-
-// If someone visits a URL that doesn't exist (like /banana)
+// 404 Handler for undefined routes
 app.use((req: Request, res: Response, next: NextFunction) => {
     const error: any = new Error('Resource Not Found');
     error.status = 404;
     next(error);
 });
 
-// This is the "Master Safety Net" that catches every error in the app
+// Centralized Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    // If it's a data validation error (bad ZIP code format)
+    // Handle Zod Validation Errors
     if (err instanceof z.ZodError) {
         return res.status(400).json({
             error: err.issues[0]?.message || "Validation Error",
@@ -185,14 +191,13 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     const status = err.status || 500;
     const message = err.message || 'Internal Server Error';
 
-    // Log the error so we can fix it later
+    // Log the error using pino-http logger if available
     if (req.log) {
         req.log.error(err);
     } else {
         console.error("Critical Error:", err);
     }
 
-    // Tell the user what happened in a nice way
     res.status(status).json({
         error: message,
         status,
@@ -202,7 +207,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // Only start the server if we run this file directly
 if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, () => {
-        // Only print the "Server Running" message once (not 16 times!)
         if (!cluster.isWorker) {
             console.log(`TypeScript Server is successfully running on http://localhost:${PORT}`);
         }
