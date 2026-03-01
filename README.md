@@ -1,25 +1,51 @@
-# 🌤️ Weather API - Virginia Cyber Range Intern Challenge
+# 🌤️ Weather API (ZIP → Current Temperature)
 
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 
-A robust, production-ready weather API built with **Express** and **TypeScript**. This project provides a simple interface to fetch current temperatures by ZIP code, featuring multi-layered security, performance optimizations, and a resilient architecture.
+A production-minded **Express + TypeScript** API that returns the **current temperature** for a given **5-digit U.S. ZIP code**. Built for the Virginia Cyber Range Development Intern Challenge.
+
+✅ **Meets the challenge contract:**
+- `npm install` then `npm start`
+- Server runs at `http://localhost:8080`
+- Route: `GET /locations/:zip`
+- Response JSON: `{ "temperature": 43, "scale": "Fahrenheit" }`
 
 ---
 
-## 🚀 Quick Start
+## ✨ Key Features
+
+- **📍 Single required endpoint**: `GET /locations/:zip`
+- **🛡️ Input validation**:
+  - ZIP must be exactly 5 digits.
+  - Scale must be `Celsius` or `Fahrenheit` (case-insensitive).
+- **🌍 External data provider**: [Open-Meteo](https://open-meteo.com/)
+  - No API key required → frictionless to run for reviewers.
+- **⚡ Performance & Reliability**:
+  - **LRU Cache**: For hot ZIP + scale lookups (10-minute TTL).
+  - **Rate Limiting**: Prevents abuse (100 req/15 min).
+  - **Security Headers**: Via `helmet`.
+  - **Structured Logging**: via `pino-http`.
+  - **Cluster Mode**: Forks workers to use all CPU cores for load distribution.
+- **🧪 Testing**: Comprehensive suite using `Jest` + `Supertest`.
+- **🚀 CI/CD**: GitHub Actions runs tests on push/PR.
+- **🐳 Docker**: Containerized and ready for deployment (optional).
+
+---
+
+## � Quick Start
 
 ### 1. Prerequisites
-- [Node.js](https://nodejs.org/) (v20 or higher recommended)
-- [npm](https://www.npmjs.com/)
+- Node.js >= 20
+- npm
 
 ### 2. Installation
 ```bash
 npm install
 ```
 
-### 3. Running the Application
+### 3. Run (required by challenge)
 ```bash
 npm start
 ```
@@ -27,48 +53,24 @@ The server will be available at `http://localhost:8080`.
 
 ---
 
-## 🛠️ Features
-
-- **📍 ZIP-to-Weather**: Converts 5-digit US ZIP codes to precise weather data using the Open-Meteo API.
-- **⚡ Performance**: 
-    - **In-Memory Caching**: Implements `lru-cache` to store recent requests (10-minute TTL) and reduce external API latency.
-    - **Cluster Mode**: Automatically scales across all available CPU cores to handle high concurrent traffic.
-- **🛡️ Security & Reliability**:
-    - **Helmet**: Secures the app by setting various HTTP headers.
-    - **Rate Limiting**: Protects against brute-force and DDoS (100 requests per 15-minute window).
-    - **Input Validation**: Strict Regex for ZIP codes and case-insensitive scale validation.
-- **📝 Logging**: Structured logging via `pino-http` for production-grade observability.
-- **🧪 Testing**: Comprehensive test suite using `Jest` and `Supertest`.
-
----
-
-## 📖 API Documentation
+## 📌 API Usage
 
 ### Get Temperature by Location
-
-Returns the current temperature for a specified ZIP code.
-
 **Endpoint:** `GET /locations/:zip`
 
-**Parameters:**
-- `zip` (Path): A 5-digit US ZIP code.
-- `scale` (Query, Optional): `Fahrenheit` (default) or `Celsius`.
+**Query Params:**
+- `scale` (optional): `Fahrenheit` (default) or `Celsius` (case-insensitive).
 
-#### Example Requests:
+#### Examples:
 
-| City | Request |
+| Goal | Command |
 | :--- | :--- |
-| **Blacksburg, VA** | `GET /locations/24060` |
-| **Beverly Hills, CA** | `GET /locations/90210?scale=Celsius` |
-| **Chicago, IL** | `GET /locations/60606?scale=Fahrenheit` |
+| **Default (Fahrenheit)** | `curl http://localhost:8080/locations/24060` |
+| **Celsius** | `curl "http://localhost:8080/locations/90210?scale=Celsius"` |
 
-#### Successful Response:
-```json
-{
-    "temperature": 43,
-    "scale": "Fahrenheit"
-}
-```
+> [!TIP]
+> **PowerShell note (Windows):** In PowerShell, `curl` is an alias for `Invoke-WebRequest`. Use `curl.exe` or `irm` (Invoke-RestMethod) instead:
+> `irm "http://localhost:8080/locations/24060"`
 
 ---
 
@@ -111,55 +113,56 @@ flowchart LR
 
 ---
 
-## 🔄 Request Lifecycle
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant S as Express Server
-    participant G as Geocoding API
-    participant W as Weather API
-
-    C->>S: GET /locations/24060
-    S->>S: Validate zip (5 digits)
-    S->>S: Validate scale param
-    S->>S: Check LRU Cache
-    alt Cache Hit
-        S-->>C: 200 { cached data }
-    else Cache Miss
-        S->>G: Fetch lat/lon for zip
-        G-->>S: { lat, lon }
-        S->>W: Fetch temperature
-        W-->>S: { temperature }
-        S->>S: Update Cache
-        S-->>C: 200 { temperature: 43, scale: "Fahrenheit" }
-    end
-```
-
----
-
 ## 🧪 Testing
 
-The project includes unit and integration tests to ensure reliability.
+This project uses **Jest + Supertest** for route-level integration tests.
 
+**Coverage includes:**
+- ✅ Valid ZIP returns 200 and a numeric temperature.
+- ✅ Default scale defaults to Fahrenheit.
+- ✅ Scale override correctly returns Celsius.
+- ✅ Invalid ZIP formats (non-numeric, wrong length) return 400.
+- ✅ Unknown ZIP (geocoding miss) returns 404.
+- ✅ Invalid scale parameters return 400.
+
+**Run tests:**
 ```bash
 npm test
 ```
 
-We test for:
-- ✅ Successful temperature retrieval (Fahrenheit/Celsius)
-- ✅ Input validation (invalid ZIP formats)
-- ✅ Error handling (non-existent ZIP codes)
-- ✅ Case-insensitivity for query parameters
+---
+
+## 🔄 CI (GitHub Actions)
+
+A workflow runs on every push and pull request to the `main` branch. It automatically installs dependencies and runs `npm test` to ensure code integrity.
+- **Workflow location:** `.github/workflows/ci.yml`
 
 ---
 
 ## 📐 Design Rationale
 
-1.  **Framework Choice**: **TypeScript** with **Express** was chosen for its type safety and wide community support, making it ideal for maintainable production code.
-2.  **External Data**: [Open-Meteo](https://open-meteo.com/) was selected as the data provider because it is free for non-commercial use, requires no API key (simplifying the setup for this challenge), and provides high-quality geocoding and weather data.
-3.  **Resilience**: The use of `node:cluster` ensures that the API can utilize full system resources, while `helmet` and `express-rate-limit` provide the "Must Have" production security baseline.
-4.  **Efficiency**: The geocoding step is often the bottleneck; caching ZIP-to-weather results drastically improves response times for repeated requests to the same location.
+- **Why Open-Meteo?** No API keys required means reviewers can run the app instantly without creating accounts or setting up `.env` secrets. It provides high-quality geocoding and weather data in a single provider.
+- **Why strict validation?** Rejecting malformed input early avoids unnecessary upstream API calls and follows secure API development practices.
+- **Why caching + rate limiting?** Reduces external latency and prevents abuse, which is critical when relying on free public endpoints.
+- **Why clustering?** Demonstrates production-level thinking regarding process concurrency and system resource utilization.
+
+---
+
+## 🐳 Docker (Optional)
+
+Docker is included as a production-ready extra.
+```bash
+docker build -t weather-api .
+docker run --rm -p 8080:8080 weather-api
+```
+
+---
+
+## 📚 References & AI Usage
+
+- **Open-Meteo API**: [Documentation](https://open-meteo.com/en/docs)
+- **Jest + Supertest**: Integration testing patterns.
+- **AI Usage**: AI assistance was used for debugging help, configuration guidance, architectural visualization, and documentation wording. Core implementation choices, endpoint logic, and final code integration were completed by the author.
 
 ---
 *Created for the Virginia Cyber Range Development Intern Challenge.*
