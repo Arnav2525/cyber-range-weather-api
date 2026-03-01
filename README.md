@@ -32,3 +32,22 @@ flowchart LR
   WeatherAPI --> Handler
   Handler -->|JSON response| Client
 ```
+
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Express Server
+    participant G as Geocoding API
+    participant W as Weather API
+
+    C->>S: GET /locations/24060
+    S->>S: Validate zip (5 digits)
+    S->>S: Validate scale param
+    S->>G: Fetch lat/lon for zip
+    G-->>S: { lat, lon }
+    S->>W: Fetch temperature
+    W-->>S: { temperature }
+    S-->>C: 200 { temperature: 43, scale: "Fahrenheit" }
+```
+
