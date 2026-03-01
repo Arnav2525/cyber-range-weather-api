@@ -22,7 +22,8 @@ const PORT = process.env.PORT || 8080;
 const weatherParamsSchema = z.object({
     zip: z.string().regex(/^\d{5}$/, "Invalid format. Zip code must be exactly 5 digits.")
 });
-// Defines the temperature scale constraint
+
+// Ensures the  scale must be Celsius or Fahrenheit. If empty, assume Fahrenheit."
 const weatherQuerySchema = z.object({
     scale: z.preprocess(
         (val) => (val === "" ? "Fahrenheit" : val),
@@ -47,7 +48,7 @@ const limiter = rateLimit({
 });
 app.use(limiter)
 
-// Avoid noisy request logging during automated tests.
+// Only show detailed logs if we aren't running tests
 if (process.env.NODE_ENV !== "test") {
     app.use(pinoHttp({
         genReqId: (req) => req.headers['x-request-id'] || crypto.randomUUID(),
@@ -57,7 +58,7 @@ if (process.env.NODE_ENV !== "test") {
     }));
 }
 
-// Correlation ID Middleware (Ensures headers are set even if pino is off)
+// Give every request a "tracking ID" so we can find it in the logs later
 app.use((req: Request, res: Response, next: NextFunction) => {
     const requestId = (req.id as string) || (req.headers['x-request-id'] as string) || crypto.randomUUID();
     req.headers['x-request-id'] = requestId;
@@ -65,14 +66,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     next();
 });
 
-
-//LRU Cache to store the last 100 requests for 10 minutes
+// A small cache to store the last 100 weather searches for 10 minutes
 const cache = new LRUCache<string, { temperature: number; scale: string }>({
     max: 100,
-    ttl: 10 * 60 * 1000, //10 minutes
-})
+    ttl: 10 * 60 * 1000,
+});
 
-// Health check endpoint
+//  Checking if the server is alive
 app.get('/health', (req, res) => {
     res.status(200).json({
         status: 'UP',
@@ -81,13 +81,13 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Swagger Documentation
+// Serve the interactive documentation at /api-docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 
 app.get('/locations/:zip', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Validate Parameters and Query using Zod
+        //Check if the user sent a valid ZIP and Scale
         const paramsResult = weatherParamsSchema.safeParse(req.params);
         const queryResult = weatherQuerySchema.safeParse(req.query);
 
@@ -101,17 +101,15 @@ app.get('/locations/:zip', async (req: Request, res: Response, next: NextFunctio
         const { zip: zipCode } = paramsResult.data;
         const normalizedScale = queryResult.data.scale.toLowerCase();
 
-        // Check cache for existing result
+         //Check if we already have the answer in our cache
         const cacheKey = `${zipCode}-${normalizedScale}`;
         const cached = cache.get(cacheKey);
         if (cached) {
-            //If cache hit, return the stored result without calling any API
-            res.status(200).json(cached);
+            res.status(200).json(cached); // Send the saved answer immediately
             return;
         }
 
-
-        //Build the GeoCoding API URL using string interpolation
+        // Ask the Geo API where this ZIP code is located (lat/lon)
         const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${zipCode}&count=1&language=en&format=json`;
 
         //Fetch the data and wait for the network to respond 
@@ -120,31 +118,37 @@ app.get('/locations/:zip', async (req: Request, res: Response, next: NextFunctio
         //Pass the raw text response into a structured JSON onject
         const geoData = await geoResponse.json();
 
-        //Protection against user typing an invalid zip code and the API finding nothing
+        // Error if the ZIP code doesn't exist
         if (!geoData.results || geoData.results.length == 0) {
             res.status(404).json({ error: "Location not found for the provided zip code." });
-            return
+            return;
         }
-        //Extract the exact coordinates from the JSON array
+
+        // Extract coordinates (Latitude and Longitude)
         const lat = geoData.results[0].latitude;
         const lon = geoData.results[0].longitude;
+
+        // Use those coordinates to ask the Weather API for the temperature
         const apiUnit = normalizedScale === 'celsius' ? 'celsius' : 'fahrenheit';
         const finalScale = normalizedScale === 'celsius' ? 'Celsius' : 'Fahrenheit';
         const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=${apiUnit}`;
+
         const weatherResponse = await fetch(weatherUrl);
         const weatherData = await weatherResponse.json() as any;
+
         if (!weatherData || !weatherData.current_weather) {
             return res.status(502).json({ error: "Weather API returned no data" });
         }
+
         const result = {
             temperature: Math.round(weatherData.current_weather.temperature),
             scale: finalScale
+        };
 
-        }
-        //Store in cache for future request
+        // Save this answer in cache for next time
         cache.set(cacheKey, result);
 
-        //Send the final successful response back to the user
+        // Send the final answer back to the user
         res.status(200).json(result);
 
 
@@ -158,16 +162,18 @@ app.get('/locations/:zip', async (req: Request, res: Response, next: NextFunctio
 
 });
 
-// 404 Handler for undefined routes
+// --- Final Error Handlers ---
+
+// If someone visits a URL that doesn't exist (like /banana)
 app.use((req: Request, res: Response, next: NextFunction) => {
     const error: any = new Error('Resource Not Found');
     error.status = 404;
     next(error);
 });
 
-// Centralized Error Handling Middleware
+// This is the "Master Safety Net" that catches every error in the app
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    // Handle Zod Validation Errors
+    // If it's a data validation error (bad ZIP code format)
     if (err instanceof z.ZodError) {
         return res.status(400).json({
             error: err.issues[0]?.message || "Validation Error",
@@ -179,22 +185,24 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     const status = err.status || 500;
     const message = err.message || 'Internal Server Error';
 
-    // Log the error using pino-http logger if available
+    // Log the error so we can fix it later
     if (req.log) {
         req.log.error(err);
     } else {
         console.error("Critical Error:", err);
     }
 
+    // Tell the user what happened in a nice way
     res.status(status).json({
         error: message,
         status,
         timestamp: new Date().toISOString()
     });
 });
-// Only start the server if this  file is run directly( not by Jest)
-if (process.env.NODE_ENV != 'test') {
+// Only start the server if we run this file directly
+if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, () => {
+        // Only print the "Server Running" message once (not 16 times!)
         if (!cluster.isWorker) {
             console.log(`TypeScript Server is successfully running on http://localhost:${PORT}`);
         }

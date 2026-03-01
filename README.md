@@ -6,6 +6,7 @@ A production-minded **Express + TypeScript** API that returns the **current temp
 - `npm install` then `npm start`
 - Server runs at `http://localhost:8080`
 - Route: `GET /locations/:zip`
+- Documentation (Swagger UI): `http://localhost:8080/api-docs`
 - Response JSON: `{ "temperature": 43, "scale": "Fahrenheit" }`
 
 ---
@@ -23,6 +24,7 @@ A production-minded **Express + TypeScript** API that returns the **current temp
     -   Health Checks: `/health` endpoint for monitoring and orchestration.
 -  Observability: Structured JSON logging via `pino-http` and centralized error handling for consistent API responses.
 - Testing: 100% passing integration tests using `Jest` + `Supertest`.
+- Interactive Documentation: Built-in Swagger UI available at `/api-docs`.
 - Docker Ready: Support for containerized deployment with included `Dockerfile` and `Makefile`.
 
 ---

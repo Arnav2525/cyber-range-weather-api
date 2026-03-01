@@ -1,8 +1,10 @@
-import cluster from 'node:cluster';
-import os from 'node:os';
-const NUM_WORKERS = os.cpus().length;
+// This file handles running the app on multiple CPU cores (Clustering)
+import cluster from 'node:cluster'; // Native tool for clustering
+import os from 'node:os'; // Used to count how many CPU cores we have
 
-//if the code is run as a primary process
+const NUM_WORKERS = os.cpus().length; // Use as many workers as possible
+
+// Stage 1: The "Primary" process (The Boss)
 if (cluster.isPrimary) {
     console.clear();
     console.log('---------------------------------------------------------');
@@ -11,40 +13,40 @@ if (cluster.isPrimary) {
     console.log(` Workers: ${NUM_WORKERS} (Active)`);
     console.log('---------------------------------------------------------');
 
-    // Fork a worker for each CPU core
+    // Create a new "Worker" for every CPU core
     for (let i = 0; i < NUM_WORKERS; i++) {
         cluster.fork();
     }
 
-    //If a worker unexpectedly , spawn a replacement automatically 
+    // If a worker crashes, spawn a replacement immediately (Self-Healing)
     cluster.on('exit', (worker, code, signal) => {
         console.warn(
-            `[cluster] Worker ${worker.process.pid} exited` +
-            `(code=${code}, signal=${signal}). Spawning replacement...`
+            `[cluster] Worker ${worker.process.pid} died. Spawning a new one...`
         );
         cluster.fork();
     });
 
-    // Shutdown Logic
+    // Clean shutdown logic (Graceful Exit)
     const shutdown = () => {
-        console.log('\n[cluster] Received kill signal. Shutting down workers gracefully...');
+        console.log('\n[cluster] Received stop signal. Cleaning up workers...');
         for (const id in cluster.workers) {
             cluster.workers[id]?.send('shutdown');
             cluster.workers[id]?.disconnect();
         }
 
-        // Forced exit after 5s if workers hang
+        // If it takes too long (> 5s), just force it to close
         setTimeout(() => {
-            console.error('[cluster] Forcefully shutting down.');
+            console.error('[cluster] Shutdown timed out. Forcing exit.');
             process.exit(1);
         }, 5000);
     };
-    // Graceful shutdown on SIGTERM and SIGINT
+
+    // Listen for "Stop" signals (like Ctrl+C)
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
 }
 else {
-    //This block runs once per worker 
+    // Stage 2: The "Worker" process (The actual workers doing the work)
     await import('./index.js');
 }
 
