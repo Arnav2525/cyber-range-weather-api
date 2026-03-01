@@ -1,19 +1,20 @@
+```mermaid
 flowchart LR
-  Client["🌐 Client (Browser / curl)"]
+  Client["🌐 Client\n(Browser / curl)"]
 
-  subgraph Cluster["Node.js Cluster (multi-process on one host)"]
-    Primary["Primary Process (forks workers)"]
-    W1["Worker 1 (Express)"]
-    W2["Worker 2 (Express)"]
-    WN["Worker N (Express)"]
+  subgraph Cluster["Node.js Cluster"]
+    Primary["Primary Process\n(forks workers)"]
+    W1["Worker 1"]
+    W2["Worker 2"]
+    WN["Worker N"]
   end
 
-  subgraph Worker["Per-worker Express Pipeline"]
+  subgraph Pipeline["Per-Worker Express Pipeline"]
     Helmet["🛡️ Helmet (Security Headers)"]
-    RateLimit["⏱️ Rate Limiter"]
+    RateLimit["⏱️ Rate Limiter (100 req/15 min)"]
     Logger["📝 Pino-HTTP Logger"]
-    Handler["📍 Route Handler: GET /locations/:zip"]
-    Cache["🗄️ LRU Cache (optional)"]
+    Handler["📍 Route Handle GET /locations/:zip"]
+    Cache["🗄️ LRU Cache"]
   end
 
   GeoAPI["🌍 Open-Meteo Geocoding API"]
@@ -21,10 +22,13 @@ flowchart LR
 
   Client --> Primary
   Primary --> W1 & W2 & WN
-
-  W1 --> Helmet --> RateLimit --> Logger --> Handler
+  W1 --> Helmet
+  Helmet --> RateLimit
+  RateLimit --> Logger
+  Logger --> Handler
   Handler --> Cache
   Cache -->|miss| GeoAPI
   GeoAPI --> WeatherAPI
   WeatherAPI --> Handler
-  Handler --> Client
+  Handler -->|JSON response| Client
+```
