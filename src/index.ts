@@ -5,9 +5,34 @@ import helmet from "helmet";
 import { pinoHttp } from "pino-http";
 import crypto from "crypto";
 import { LRUCache } from "lru-cache";
+import { z } from 'zod';
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+// Load Swagger JSON
+const swaggerDocument = JSON.parse(
+    readFileSync(join(process.cwd(), 'src', 'swagger.json'), 'utf8')
+);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// Validation Schemas
+const weatherParamsSchema = z.object({
+    zip: z.string().regex(/^\d{5}$/, "Invalid format. Zip code must be exactly 5 digits.")
+});
+// Defines the temperature scale constraint
+const weatherQuerySchema = z.object({
+    scale: z.preprocess(
+        (val) => (val === "" ? "Fahrenheit" : val),
+        // Ensures the scale is a string and defaults to Fahrenheit if empty
+        z.string().optional().default("Fahrenheit")
+    ).refine(
+        (val) => ["celsius", "fahrenheit"].includes((val as string).toLowerCase()),
+        { message: "Invalid scale. Must be Celsius or Fahrenheit" }
+    ) as z.ZodType<string>
+});
 
 //Helmet middleware for security headers
 app.use(helmet());
@@ -24,8 +49,21 @@ app.use(limiter)
 
 // Avoid noisy request logging during automated tests.
 if (process.env.NODE_ENV !== "test") {
-    app.use(pinoHttp());
+    app.use(pinoHttp({
+        genReqId: (req) => req.headers['x-request-id'] || crypto.randomUUID(),
+        customAttributeKeys: {
+            reqId: 'requestId'
+        }
+    }));
 }
+
+// Correlation ID Middleware (Ensures headers are set even if pino is off)
+app.use((req: Request, res: Response, next: NextFunction) => {
+    const requestId = (req.id as string) || (req.headers['x-request-id'] as string) || crypto.randomUUID();
+    req.headers['x-request-id'] = requestId;
+    res.setHeader('X-Request-ID', requestId);
+    next();
+});
 
 
 //LRU Cache to store the last 100 requests for 10 minutes
@@ -43,24 +81,27 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.get('/locations/:zip', async (req: Request, res: Response, next: any) => {
+
+app.get('/locations/:zip', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const zipCode = req.params.zip;
-        //This regex ensures the zip code is exactly 5 digits (0-9) 
-        const zipRegex = /^\d{5}$/;
-        if (!zipRegex.test(String(zipCode))) {
-            res.status(400).json({ error: "Invalid format. Zip code must be exactly 5 digits." });
-            return;
+        // Validate Parameters and Query using Zod
+        const paramsResult = weatherParamsSchema.safeParse(req.params);
+        const queryResult = weatherQuerySchema.safeParse(req.query);
+
+        if (!paramsResult.success) {
+            return res.status(400).json({ error: paramsResult.error.issues[0]?.message || "Invalid Parameters" });
         }
-        //Validate scale input 
-        const scaleInput = (req.query.scale as string) || 'Fahrenheit';
-        const normalizedScale = scaleInput.toLowerCase();
-        const validScales = ['celsius', 'fahrenheit']
-        if (!validScales.includes(normalizedScale)) {
-            return res.status(400).json({ error: "Invalid scale. Must be Celsius or Fahrenheit" });
+        if (!queryResult.success) {
+            return res.status(400).json({ error: queryResult.error.issues[0]?.message || "Invalid Query" });
         }
-        //Check cache for existing result
+
+        const { zip: zipCode } = paramsResult.data;
+        const normalizedScale = queryResult.data.scale.toLowerCase();
+
+        // Check cache for existing result
         const cacheKey = `${zipCode}-${normalizedScale}`;
         const cached = cache.get(cacheKey);
         if (cached) {
@@ -126,6 +167,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Centralized Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    // Handle Zod Validation Errors
+    if (err instanceof z.ZodError) {
+        return res.status(400).json({
+            error: err.issues[0]?.message || "Validation Error",
+            status: 400,
+            timestamp: new Date().toISOString()
+        });
+    }
+
     const status = err.status || 500;
     const message = err.message || 'Internal Server Error';
 

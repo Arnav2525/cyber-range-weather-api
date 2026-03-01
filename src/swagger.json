@@ -1,0 +1,148 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Weather API",
+        "version": "1.0.0",
+        "description": "A production-grade API that returns current temperature for a given U.S. ZIP code.",
+        "contact": {
+            "name": "Virginia Cyber Range Dev Intern"
+        }
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "Local Development Server"
+        }
+    ],
+    "paths": {
+        "/locations/{zip}": {
+            "get": {
+                "summary": "Get current temperature by ZIP code",
+                "description": "Returns the current temperature in Fahrenheit or Celsius for a valid 5-digit U.S. ZIP code.",
+                "parameters": [
+                    {
+                        "name": "zip",
+                        "in": "path",
+                        "required": true,
+                        "description": "5-digit U.S. ZIP code",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^\\d{5}$"
+                        }
+                    },
+                    {
+                        "name": "scale",
+                        "in": "query",
+                        "required": false,
+                        "description": "Temperature scale (Fahrenheit or Celsius)",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Fahrenheit",
+                                "Celsius",
+                                "fahrenheit",
+                                "celsius"
+                            ],
+                            "default": "Fahrenheit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "temperature": {
+                                            "type": "number",
+                                            "example": 72
+                                        },
+                                        "scale": {
+                                            "type": "string",
+                                            "example": "Fahrenheit"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input (ZIP or Scale)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Location not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "summary": "Check API health status",
+                "responses": {
+                    "200": {
+                        "description": "System is healthy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "UP"
+                                        },
+                                        "uptime": {
+                                            "type": "number",
+                                            "example": 3600.5
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Error": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "integer"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -17,20 +17,19 @@ A production-minded **Express + TypeScript** API that returns the **current temp
 ## ✨ Key Features
 
 - **📍 Single required endpoint**: `GET /locations/:zip`
-- **🛡️ Input validation**:
-  - ZIP must be exactly 5 digits.
-  - Scale must be `Celsius` or `Fahrenheit` (case-insensitive).
-- **🌍 External data provider**: [Open-Meteo](https://open-meteo.com/)
-  - No API key required → frictionless to run for reviewers.
+- **🛡️ Schema-Driven Validation (Zod)**: 
+  - Bulletproof input handling for ZIPs and Scales using `zod`.
+  - Automatic type inference and standardized validation errors.
+- **🌍 External data provider**: [Open-Meteo](https://open-meteo.com/) (No API key required).
 - **⚡ Performance & Reliability**:
   - **LRU Cache**: For hot ZIP + scale lookups (10-minute TTL).
   - **Rate Limiting**: Prevents abuse (100 req/15 min).
-  - **Security Headers**: Via `helmet`.
-  - **Structured Logging**: via `pino-http`.
-  - **Cluster Mode**: Forks workers to use all CPU cores for load distribution.
-- **🧪 Testing**: Comprehensive suite using `Jest` + `Supertest`.
-- **🚀 CI/CD**: GitHub Actions runs tests on push/PR.
-- **🐳 Docker**: Containerized and ready for deployment (optional).
+  - **Node.js Clustering**: Multi-core utilization for high availability.
+  - **Graceful Shutdown**: Handles process signals (`SIGTERM`/`SIGINT`) to finish pending requests before exiting.
+  - **Health Checks**: `/health` endpoint for monitoring and orchestration.
+- **� Observability**: Structured JSON logging via `pino-http` and centralized error handling for consistent API responses.
+- **🧪 Testing**: 100% passing integration tests using `Jest` + `Supertest`.
+- **🛠️ Developer Automation**: Includes a `Makefile` for standardized workflows (`make test`, `make start`, etc.).
 
 ---
 
@@ -50,6 +49,13 @@ npm install
 npm start
 ```
 The server will be available at `http://localhost:8080`.
+
+### 🛠️ Developer Commands (Makefile)
+If you have `make` installed, you can use the following shortcuts:
+- `make install`: Install dependencies.
+- `make start`: Start the server.
+- `make test`: Run all tests.
+- `make docker-build`: Build the container.
 
 ---
 
@@ -83,8 +89,10 @@ flowchart LR
   end
 
   subgraph Pipeline["Per-Worker Express Pipeline"]
+    Tracing["🆔 Trace ID Middleware<br>(X-Request-ID)"]
     Helmet["🛡️ Helmet<br>(Security Headers)"]
     RateLimit["⏱️ Rate Limiter<br>(100 req/15 min)"]
+    Docs["📖 Swagger UI<br>/api-docs"]
     Logger["📝 Pino-HTTP<br>Logger"]
     Handler["📍 Route Handler<br>GET /locations/:zip"]
     Cache["🗄️ LRU Cache"]
@@ -118,8 +126,7 @@ sequenceDiagram
     participant W as Weather API
 
     C->>S: GET /locations/24060
-    S->>S: Validate zip (5 digits)
-    S->>S: Validate scale param
+    S->>S: Zod Schema Validation (ZIP & Scale)
     S->>S: Check LRU Cache
     alt Cache Hit
         S-->>C: 200 { cached data }
