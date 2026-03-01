@@ -9,6 +9,12 @@ A production-minded **Express + TypeScript** API that returns the **current temp
 - Documentation (Swagger UI): `http://localhost:8080/api-docs`
 - Response JSON: `{ "temperature": 43, "scale": "Fahrenheit" }`
 
+**Alternative: Run using Docker (Cross-Platform)**
+```bash
+npm run docker:build
+npm run docker:run
+```
+
 ---
 
 ## ✨ Key Features
@@ -163,15 +169,6 @@ A workflow runs on every push and pull request to the `main` branch. It automati
 - **Why caching + rate limiting?** I implemented these features to  reduce external latency and preventing abuse, which is critical when relying on free public endpoints. It also prevents DDoS attacks. 
 - **Why clustering?** It is to optimize system resource utilization.
 
----
-
-## 🐳 Docker (Optional)
-
-Docker is included as a production-ready extra.
-```bash
-docker build -t weather-api .
-docker run --rm -p 8080:8080 weather-api
-```
 
 ---
 

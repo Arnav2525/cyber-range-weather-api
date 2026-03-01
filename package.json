@@ -6,7 +6,9 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "start": "npx tsx src/server.ts",
-    "start:windows": "npx tsx src/server.ts"
+    "start:windows": "npx tsx src/server.ts",
+    "docker:build": "docker build -t weather-api .",
+    "docker:run": "docker run --rm -p 8080:8080 weather-api"
   },
   "keywords": [],
   "author": "",
