@@ -1,9 +1,9 @@
 ```mermaid
 flowchart LR
-  Client["🌐 Client\n(Browser / curl)"]
+  Client["🌐 Client (Browser / curl)"]
 
   subgraph Cluster["Node.js Cluster"]
-    Primary["Primary Process\n(forks workers)"]
+    Primary["Primary Process (forks workers)"]
     W1["Worker 1"]
     W2["Worker 2"]
     WN["Worker N"]
