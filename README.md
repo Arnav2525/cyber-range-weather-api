@@ -2,7 +2,7 @@
 
 A production-minded **Express + TypeScript** API that returns the **current temperature** for a given **5-digit U.S. ZIP code**. Built for the Virginia Cyber Range Development Intern Challenge.
 
-✅ **Meets the challenge contract:**
+ **Meets the challenge contract:**
 - `npm install` then `npm start`
 - Server runs at `http://localhost:8080`
 - Route: `GET /locations/:zip`
