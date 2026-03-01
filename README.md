@@ -13,8 +13,7 @@ A production-minded **Express + TypeScript** API that returns the **current temp
 ## ✨ Key Features
 
 -  Single required endpoint: `GET /locations/:zip`
-- Schema-Driven Validation (Zod): 
-  - Bulletproof input handling for ZIPs and Scales using `zod`.
+- Schema-Driven Validation (Zod): Bulletproof input handling for ZIPs and Scales using `zod`.
 - External data provider: [Open-Meteo](https://open-meteo.com/) (No API key required).
 -  Performance & Reliability:
   - LRU Cache: For hot ZIP + scale lookups (10-minute TTL).
