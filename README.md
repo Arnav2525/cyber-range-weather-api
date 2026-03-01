@@ -160,7 +160,7 @@ A workflow runs on every push and pull request to the `main` branch. It automati
 
 - **Why Open-Meteo?** I believe this is the best choice because no API keys required means reviewers can run the app instantly without creating accounts or setting up `.env` secrets. It also meant that I did not have to expose any private API keys in a public repository. 
 - **Why strict validation?** Rejecting malformed input early avoids unnecessary upstream API calls and follows secure API development practices.
-- **Why caching + rate limiting?** Reduces external latency and prevents abuse, which is critical when relying on free public endpoints. It also prevents DDoS attacks. 
+- **Why caching + rate limiting?** I implemented these features to  reduce external latency and preventing abuse, which is critical when relying on free public endpoints. It also prevents DDoS attacks. 
 - **Why clustering?** It is to optimize system resource utilization.
 
 ---
@@ -179,6 +179,6 @@ docker run --rm -p 8080:8080 weather-api
 
 - **Open-Meteo API**: [Documentation](https://open-meteo.com/en/docs)
 - **Jest + Supertest**: Integration testing patterns.
-- **AI Usage**: AI assistance was used for debugging help, configuration guidance, architectural visualization, and documentation wording. Core implementation choices, endpoint logic, and final code integration were completed by the author.
+- **AI Usage**: AI assistance (ChatGPT and Gemini) was used for debugging help, configuration guidance, architectural visualization, and documentation wording. Core implementation choices, endpoint logic, and final code integration were completed by the author.
 
 ]
