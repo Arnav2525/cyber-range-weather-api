@@ -16,11 +16,11 @@ A production-minded **Express + TypeScript** API that returns the **current temp
 - Schema-Driven Validation (Zod): Bulletproof input handling for ZIPs and Scales using `zod`.
 - External data provider: [Open-Meteo](https://open-meteo.com/) (No API key required).
 -  Performance & Reliability:
-  - LRU Cache: For hot ZIP + scale lookups (10-minute TTL).
-  - Rate Limiting: Prevents abuse (100 req/15 min).
-  - Node.js Clustering: Multi-core utilization for high availability.
-  - Graceful Shutdown: Handles process signals (`SIGTERM`/`SIGINT`) to finish pending requests before exiting.
-  - Health Checks: `/health` endpoint for monitoring and orchestration.
+    - LRU Cache: For hot ZIP + scale lookups (10-minute TTL).
+    - Rate Limiting: Prevents abuse (100 req/15 min).
+    - Node.js Clustering: Multi-core utilization for high availability.
+    - Graceful Shutdown: Handles process signals (`SIGTERM`/`SIGINT`) to finish pending requests before exiting.
+  -   Health Checks: `/health` endpoint for monitoring and orchestration.
 -  Observability: Structured JSON logging via `pino-http` and centralized error handling for consistent API responses.
 - Testing: 100% passing integration tests using `Jest` + `Supertest`.
 - Docker Ready: Support for containerized deployment with included `Dockerfile` and `Makefile`.
