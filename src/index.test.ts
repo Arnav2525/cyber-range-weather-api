@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from './index';
+import app from './index.js';
 describe('Weather API routes', () => {
     //Test 1: GET request with a valid correct 5 digit zip code (Blacksburg)
     it('should return 200 and default to Fahrenheit for a valid zip code', async () => {
