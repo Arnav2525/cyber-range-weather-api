@@ -1,9 +1,5 @@
 # 🌤️ Weather API (ZIP → Current Temperature)
 
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
-
 A production-minded **Express + TypeScript** API that returns the **current temperature** for a given **5-digit U.S. ZIP code**. Built for the Virginia Cyber Range Development Intern Challenge.
 
 ✅ **Meets the challenge contract:**
@@ -185,5 +181,4 @@ docker run --rm -p 8080:8080 weather-api
 - **Jest + Supertest**: Integration testing patterns.
 - **AI Usage**: AI assistance was used for debugging help, configuration guidance, architectural visualization, and documentation wording. Core implementation choices, endpoint logic, and final code integration were completed by the author.
 
----
-*Created for the Virginia Cyber Range Development Intern Challenge.*
+]
