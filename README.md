@@ -29,7 +29,7 @@ A production-minded **Express + TypeScript** API that returns the **current temp
   - **Health Checks**: `/health` endpoint for monitoring and orchestration.
 - **� Observability**: Structured JSON logging via `pino-http` and centralized error handling for consistent API responses.
 - **🧪 Testing**: 100% passing integration tests using `Jest` + `Supertest`.
-- **🛠️ Developer Automation**: Includes a `Makefile` for standardized workflows (`make test`, `make start`, etc.).
+- **🛠️ Docker Ready**: Support for containerized deployment with included `Dockerfile` and `Makefile` (advanced).
 
 ---
 
@@ -44,18 +44,10 @@ A production-minded **Express + TypeScript** API that returns the **current temp
 npm install
 ```
 
-### 3. Run (required by challenge)
+### 4. Test (Verified Integrity)
 ```bash
-npm start
+npm test
 ```
-The server will be available at `http://localhost:8080`.
-
-### 🛠️ Developer Commands (Makefile)
-If you have `make` installed, you can use the following shortcuts:
-- `make install`: Install dependencies.
-- `make start`: Start the server.
-- `make test`: Run all tests.
-- `make docker-build`: Build the container.
 
 ---
 
