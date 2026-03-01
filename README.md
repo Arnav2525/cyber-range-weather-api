@@ -25,7 +25,7 @@ A production-minded **Express + TypeScript** API that returns the **current temp
   - **Health Checks**: `/health` endpoint for monitoring and orchestration.
 - **� Observability**: Structured JSON logging via `pino-http` and centralized error handling for consistent API responses.
 - **🧪 Testing**: 100% passing integration tests using `Jest` + `Supertest`.
-- **🛠️ Docker Ready**: Support for containerized deployment with included `Dockerfile` and `Makefile` (advanced).
+- **🛠️ Docker Ready**: Support for containerized deployment with included `Dockerfile` and `Makefile`.
 
 ---
 
