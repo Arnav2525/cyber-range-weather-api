@@ -1,6 +1,6 @@
 ```mermaid
-Architecture :
 
+### 🏗️ System Architecture
 flowchart LR
   Client["🌐 Client<br>(Browser / curl)"]
 
@@ -35,8 +35,8 @@ flowchart LR
   Handler -->|JSON response| Client
 ```
 
-Request LifeCycle : 
 
+### 🔄 Request Lifecycle
 ```mermaid
 sequenceDiagram
     participant C as Client
