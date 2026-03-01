@@ -1,6 +1,7 @@
+### 🏗️ System Architecture
 ```mermaid
 
-### 🏗️ System Architecture
+
 flowchart LR
   Client["🌐 Client<br>(Browser / curl)"]
 
