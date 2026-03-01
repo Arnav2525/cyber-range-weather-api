@@ -113,6 +113,33 @@ flowchart LR
 
 ---
 
+## 🔄 Flow of Execution
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Express Server
+    participant G as Geocoding API
+    participant W as Weather API
+
+    C->>S: GET /locations/24060
+    S->>S: Validate zip (5 digits)
+    S->>S: Validate scale param
+    S->>S: Check LRU Cache
+    alt Cache Hit
+        S-->>C: 200 { cached data }
+    else Cache Miss
+        S->>G: Fetch lat/lon for zip
+        G-->>S: { lat, lon }
+        S->>W: Fetch temperature
+        W-->>S: { temperature }
+        S->>S: Update Cache
+        S-->>C: 200 { temperature: 43, scale: "Fahrenheit" }
+    end
+```
+
+---
+
 ## 🧪 Testing
 
 This project uses **Jest + Supertest** for route-level integration tests.
