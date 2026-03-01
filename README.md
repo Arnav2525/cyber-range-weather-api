@@ -67,11 +67,6 @@ The server will be available at `http://localhost:8080`.
 | :--- | :--- |
 | **Default (Fahrenheit)** | `curl http://localhost:8080/locations/24060` |
 | **Celsius** | `curl "http://localhost:8080/locations/90210?scale=Celsius"` |
-
-> [!TIP]
-> **PowerShell note (Windows):** In PowerShell, `curl` is an alias for `Invoke-WebRequest`. Use `curl.exe` or `irm` (Invoke-RestMethod) instead:
-> `irm "http://localhost:8080/locations/24060"`
-
 ---
 
 ## 🏗️ System Architecture
