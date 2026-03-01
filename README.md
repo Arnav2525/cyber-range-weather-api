@@ -140,12 +140,12 @@ sequenceDiagram
 This project uses **Jest + Supertest** for route-level integration tests.
 
 **Coverage includes:**
-- ✅ Valid ZIP returns 200 and a numeric temperature.
-- ✅ Default scale defaults to Fahrenheit.
-- ✅ Scale override correctly returns Celsius.
-- ✅ Invalid ZIP formats (non-numeric, wrong length) return 400.
-- ✅ Unknown ZIP (geocoding miss) returns 404.
-- ✅ Invalid scale parameters return 400.
+-  Valid ZIP returns 200 and a numeric temperature.
+-  Default scale defaults to Fahrenheit.
+-  Scale override correctly returns Celsius.
+-  Invalid ZIP formats (non-numeric, wrong length) return 400.
+-  Unknown ZIP (geocoding miss) returns 404.
+- Invalid scale parameters return 400.
 
 **Run tests:**
 ```bash
@@ -165,8 +165,8 @@ A workflow runs on every push and pull request to the `main` branch. It automati
 
 - **Why Open-Meteo?** No API keys required means reviewers can run the app instantly without creating accounts or setting up `.env` secrets. It provides high-quality geocoding and weather data in a single provider.
 - **Why strict validation?** Rejecting malformed input early avoids unnecessary upstream API calls and follows secure API development practices.
-- **Why caching + rate limiting?** Reduces external latency and prevents abuse, which is critical when relying on free public endpoints.
-- **Why clustering?** Demonstrates production-level thinking regarding process concurrency and system resource utilization.
+- **Why caching + rate limiting?** Reduces external latency and prevents abuse, which is critical when relying on free public endpoints. It also prevents DDoS attacks. 
+- **Why clustering?** It is to optimize system resource utilization.
 
 ---
 
