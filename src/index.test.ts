@@ -56,7 +56,7 @@ describe('Weather API routes', () => {
     it('should return 400 if the scale is invalid (like Kelvin)', async () => {
         const response = await request(app).get('/locations/24060?scale=Kelvin');
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe("I-nvalid scale. Must be Celsius or Fahrenheit");
+        expect(response.body.error).toBe("Invalid scale. Must be Celsius or Fahrenheit");
 
     });
 
