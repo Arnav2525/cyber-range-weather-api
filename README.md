@@ -179,4 +179,4 @@ docker run --rm -p 8080:8080 weather-api
 - **Jest + Supertest**: Integration testing patterns.
 - **AI Usage**: AI assistance (ChatGPT and Gemini) was used for debugging help, configuration guidance, architectural visualization, and documentation wording. Core implementation choices, endpoint logic, and final code integration were completed by the author.
 
-]
+
