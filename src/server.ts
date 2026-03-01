@@ -2,7 +2,7 @@ import cluster from 'node:cluster';
 import os from 'node:os';
 const NUM_WORKERS = os.cpus().length;
 
-
+//if the code is run as a primary process
 if (cluster.isPrimary) {
     console.clear();
     console.log('---------------------------------------------------------');
@@ -39,7 +39,7 @@ if (cluster.isPrimary) {
             process.exit(1);
         }, 5000);
     };
-
+    // Graceful shutdown on SIGTERM and SIGINT
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
 }
