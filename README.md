@@ -1,12 +1,8 @@
 # 🌤️ Weather API (ZIP → Current Temperature)
 
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
-
 A production-minded **Express + TypeScript** API that returns the **current temperature** for a given **5-digit U.S. ZIP code**. Built for the Virginia Cyber Range Development Intern Challenge.
 
-✅ **Meets the challenge contract:**
+ **Meets the challenge contract:**
 - `npm install` then `npm start`
 - Server runs at `http://localhost:8080`
 - Route: `GET /locations/:zip`
@@ -16,16 +12,16 @@ A production-minded **Express + TypeScript** API that returns the **current temp
 
 ## ✨ Key Features
 
-- Single required endpoint: `GET /locations/:zip`
+-  Single required endpoint: `GET /locations/:zip`
 - Schema-Driven Validation (Zod): Bulletproof input handling for ZIPs and Scales using `zod`.
 - External data provider: [Open-Meteo](https://open-meteo.com/) (No API key required).
-- Performance & Reliability:
-   - LRU Cache: For hot ZIP + scale lookups (10-minute TTL).
-   - Rate Limiting: Prevents abuse (100 req/15 min).
-   - Node.js Clustering: Multi-core utilization for high availability.
-   - Graceful Shutdown: Handles process signals (`SIGTERM`/`SIGINT`) to finish pending requests before exiting.
-   - Health Checks: `/health` endpoint for monitoring and orchestration.
-- Observability: Structured JSON logging via `pino-http` and centralized error handling for consistent API responses.
+-  Performance & Reliability:
+  - LRU Cache: For hot ZIP + scale lookups (10-minute TTL).
+  - Rate Limiting: Prevents abuse (100 req/15 min).
+  - Node.js Clustering: Multi-core utilization for high availability.
+  - Graceful Shutdown: Handles process signals (`SIGTERM`/`SIGINT`) to finish pending requests before exiting.
+  - Health Checks: `/health` endpoint for monitoring and orchestration.
+-  Observability: Structured JSON logging via `pino-http` and centralized error handling for consistent API responses.
 - Testing: 100% passing integration tests using `Jest` + `Supertest`.
 - Docker Ready: Support for containerized deployment with included `Dockerfile` and `Makefile`.
 
@@ -162,7 +158,7 @@ A workflow runs on every push and pull request to the `main` branch. It automati
 
 - **Why Open-Meteo?** I believe this is the best choice because no API keys required means reviewers can run the app instantly without creating accounts or setting up `.env` secrets. It also meant that I did not have to expose any private API keys in a public repository. 
 - **Why strict validation?** Rejecting malformed input early avoids unnecessary upstream API calls and follows secure API development practices.
-- **Why caching + rate limiting?** Reduces external latency and prevents abuse, which is critical when relying on free public endpoints. It also prevents DDoS attacks. 
+- **Why caching + rate limiting?** I implemented these features to  reduce external latency and preventing abuse, which is critical when relying on free public endpoints. It also prevents DDoS attacks. 
 - **Why clustering?** It is to optimize system resource utilization.
 
 ---
@@ -181,7 +177,6 @@ docker run --rm -p 8080:8080 weather-api
 
 - **Open-Meteo API**: [Documentation](https://open-meteo.com/en/docs)
 - **Jest + Supertest**: Integration testing patterns.
-- **AI Usage**: AI assistance was used for debugging help, configuration guidance, architectural visualization, and documentation wording. Core implementation choices, endpoint logic, and final code integration were completed by the author.
+- **AI Usage**: AI assistance (ChatGPT and Gemini) was used for debugging help, configuration guidance, architectural visualization, and documentation wording. Core implementation choices, endpoint logic, and final code integration were completed by the author.
 
----
-*Created for the Virginia Cyber Range Development Intern Challenge.*
+
